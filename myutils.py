@@ -8,6 +8,9 @@ def normalize(x,y,z):
     l = dist(x,y,z,0,0,0)
     return x/l, y/l, z/l
 
+def length(x,y,z):
+    return (x*x + y*y + z*z)**0.5
+
 def vec3_add(v1,v2):
     return v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]
 
