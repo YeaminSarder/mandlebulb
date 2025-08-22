@@ -1,6 +1,9 @@
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
+import os #for os.kill. mac fix for exitting
+import signal
+exit_flag = False
 
 # Camera-related variables
 camera_pos = (0,500,500)
@@ -60,29 +63,10 @@ def draw_shapes():
 
 
 def keyboardListener(key, x, y):
-    """
-    Handles keyboard inputs for player movement, gun rotation, camera updates, and cheat mode toggles.
-    """
-    # # Move forward (W key)
-    # if key == b'w':  
+    if key == b'\x1b': #escape
+        global exit_flag
+        exit_flag = True
 
-    # # Move backward (S key)
-    # if key == b's':
-
-    # # Rotate gun left (A key)
-    # if key == b'a':
-
-    # # Rotate gun right (D key)
-    # if key == b'd':
-
-    # # Toggle cheat mode (C key)
-    # if key == b'c':
-
-    # # Toggle cheat vision (V key)
-    # if key == b'v':
-
-    # # Reset the game if R key is pressed
-    # if key == b'r':
 
 
 def specialKeyListener(key, x, y):
@@ -140,11 +124,7 @@ def setupCamera():
 
 
 def idle():
-    """
-    Idle function that runs continuously:
-    - Triggers screen redraw for real-time updates.
-    """
-    # Ensure the screen updates with the latest changes
+    if exit_flag: os.kill(os.getpid(), signal.SIGTERM)
     glutPostRedisplay()
 
 
