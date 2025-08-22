@@ -17,6 +17,15 @@ def vec3_add(v1,v2):
 def vec3_sub(v1,v2):
     return v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]
 
+
+def vec3_op1(f,v1):
+    return tuple(map(f, v1))
+
+
+def vec3_op2(f,v1,v2):
+    return f(v1[0],v2[0]), f(v1[1],v2[1]), f(v1[2],v2[2])
+
+
 def vec3_scaler_mul(k, v):
     return k * v[0], k * v[1], k * v[2]
 
