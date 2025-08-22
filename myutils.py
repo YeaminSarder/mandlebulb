@@ -29,3 +29,5 @@ def vec3_op2(f,v1,v2):
 def vec3_scaler_mul(k, v):
     return k * v[0], k * v[1], k * v[2]
 
+def vec3_dot(v1,v2):
+    return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]
