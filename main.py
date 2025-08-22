@@ -3,10 +3,14 @@ from OpenGL.GLUT import *
 from OpenGL.GLU import *
 import os #for os.kill. mac fix for exitting
 import signal
+
+from sdf import *
+from raymerch import raymerch, raygen
+
 exit_flag = False
 
 # Camera-related variables
-camera_pos = (0,500,500)
+camera_pos = (0,-30,0)
 
 fovY = 120  # Field of view
 GRID_LENGTH = 600  # Length of grid lines
@@ -76,11 +80,12 @@ def specialKeyListener(key, x, y):
     global camera_pos
     x, y, z = camera_pos
     # Move camera up (UP arrow key)
-    # if key == GLUT_KEY_UP:
+    if key == GLUT_KEY_UP:
+        z += 1
 
     # # Move camera down (DOWN arrow key)
-    # if key == GLUT_KEY_DOWN:
-
+    if key == GLUT_KEY_DOWN:
+        z -= 1
     # moving camera left (LEFT arrow key)
     if key == GLUT_KEY_LEFT:
         x -= 1  # Small angle decrement for smooth movement
@@ -111,7 +116,7 @@ def setupCamera():
     glMatrixMode(GL_PROJECTION)  # Switch to projection matrix mode
     glLoadIdentity()  # Reset the projection matrix
     # Set up a perspective projection (field of view, aspect ratio, near clip, far clip)
-    gluPerspective(fovY, 1.25, 0.1, 1500) # Think why aspect ration is 1.25?
+    gluPerspective(fovY, 1.25, 0.1, 15000) # Think why aspect ration is 1.25?
     glMatrixMode(GL_MODELVIEW)  # Switch to model-view matrix mode
     glLoadIdentity()  # Reset the model-view matrix
 
@@ -128,26 +133,33 @@ def idle():
     glutPostRedisplay()
 
 
-def showScreen():
-    """
-    Display function to render the game scene:
-    - Clears the screen and sets up the camera.
-    - Draws everything of the screen
-    """
-    # Clear color and depth buffers
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    glLoadIdentity()  # Reset modelview matrix
-    glViewport(0, 0, 1000, 800)  # Set viewport size
 
-    setupCamera()  # Configure camera perspective
-
-    # Draw a random points
-    glPointSize(20)
+def render():
     glBegin(GL_POINTS)
-    glVertex3f(-GRID_LENGTH, GRID_LENGTH, 0)
+    resolution = 25
+    origin = camera_pos
+    for d in raygen(*origin, 0,0,0, 0,0,1):
+        p = raymerch(origin, d, CubeSdf((10,10,10)))
+        glVertex3d(*p)
     glEnd()
-
-    # Draw the grid (game floor)
+def draw_rays():
+    glBegin(GL_LINES)
+    resolution = 25
+    for i in range(resolution):
+        for j in range(resolution):
+            p = raymerch(camera_pos, (i/resolution-0.5,1,j/resolution-0.5), CircleSdf(10))
+            glVertex3d(*camera_pos)
+            glVertex3d(*p)
+    glEnd()
+def draw_ray_dir():
+    glBegin(GL_LINES)
+    origin = (0,-30,0)
+    for dir in raygen(*origin, 0,0,0, 0,0,1):
+        glVertex3f(*origin)
+        glVertex3f(*vec3_add(origin,dir))
+    glEnd()
+def draw_grid():
+        # Draw the grid (game floor)
     glBegin(GL_QUADS)
     
     glColor3f(1, 1, 1)
@@ -174,11 +186,34 @@ def showScreen():
     glVertex3f(0, GRID_LENGTH, 0)
     glEnd()
 
+def showScreen():
+    """
+    Display function to render the game scene:
+    - Clears the screen and sets up the camera.
+    - Draws everything of the screen
+    """
+    # Clear color and depth buffers
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glLoadIdentity()  # Reset modelview matrix
+    glViewport(0, 0, 1000, 800)  # Set viewport size
+
+    setupCamera()  # Configure camera perspective
+
+    # # Draw a random points
+    # glPointSize(20)
+    # glBegin(GL_POINTS)
+    # glVertex3f(-GRID_LENGTH, GRID_LENGTH, 0)
+    # glEnd()
+
+
     # Display game info text at a fixed screen position
     draw_text(10, 770, f"A Random Fixed Position Text")
     draw_text(10, 740, f"See how the position and variable change?: {rand_var}")
 
-    draw_shapes()
+    #draw_grid()
+    render()
+    #draw_rays()
+    #draw_ray_dir()
 
     # Swap buffers for smooth rendering (double buffering)
     glutSwapBuffers()
