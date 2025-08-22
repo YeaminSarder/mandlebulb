@@ -31,3 +31,8 @@ def vec3_scaler_mul(k, v):
 
 def vec3_dot(v1,v2):
     return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]
+
+def vec3_cross(v1,v2):
+    a, b, c = v1
+    d, e, f = v2
+    return b*f - e*c, c*d - a*f, a*e - b*d
