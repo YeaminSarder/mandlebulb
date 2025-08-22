@@ -1,18 +1,4 @@
-def dist(x,y,z,a,b,c):
-    x = x-a
-    y = y-b
-    z = z-c
-    return (x*x + y*y + z*z) ** 0.5
-
-def normalize(x,y,z):
-    l = dist(x,y,z,0,0,0)
-    return x/l, y/l, z/l
-
-def vec3_add(v1,v2):
-    return v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]
-
-def vec3_scaler_mul(k, v):
-    return k * v[0], k * v[1], k * v[2]
+from myutils import *
 
 def raymerch(point, direction, minsdf, max_iteration = 100, threshold = 0.00001):
     """
