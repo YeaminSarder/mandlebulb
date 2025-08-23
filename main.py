@@ -15,7 +15,9 @@ camera_pos = (0,-30,0)
 fovY = 120  # Field of view
 GRID_LENGTH = 600  # Length of grid lines
 rand_var = 423
-
+fps = 0
+from time import time
+ptime = time()
 
 def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
     glColor3f(1,1,1)
@@ -130,6 +132,10 @@ def setupCamera():
 
 def idle():
     if exit_flag: os.kill(os.getpid(), signal.SIGTERM)
+    global ptime, fps
+    ntime = time()
+    fps = 1/(ntime-ptime)
+    ptime = ntime
     glutPostRedisplay()
 
 
@@ -207,7 +213,7 @@ def showScreen():
 
 
     # Display game info text at a fixed screen position
-    draw_text(10, 770, f"A Random Fixed Position Text")
+    draw_text(10, 770, f"fps: {fps}")
     draw_text(10, 740, f"See how the position and variable change?: {rand_var}")
 
     #draw_grid()
