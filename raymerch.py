@@ -34,8 +34,8 @@ def raygen(x,y,z,a,b,c,p,q,r,resx=50,resy=50):
     """
     mid = normalize(*vec3_sub((a,b,c), (x,y,z)))
     v = (p,q,r)
-    dy = normalize(*vec3_sub(v,vec3_scaler_mul(vec3_dot(mid, (p,q,r)),mid)))
-    dx = vec3_cross(mid,dy)
+    dx = normalize(*vec3_cross(mid, v))
+    dy = normalize(*vec3_cross(dx,mid))
     for i in range(resy):
         for j in range(resx):
             fy = -0.5 + i/resy
