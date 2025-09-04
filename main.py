@@ -139,15 +139,38 @@ def idle():
     glutPostRedisplay()
 
 
+resolution = 50
+points = [(0,0,0) for _ in range(resolution*resolution)]  # capture points in each frame
 
 def render():
-    glBegin(GL_POINTS)
-    resolution = 25
     origin = camera_pos
-    for d in raygen(*origin, 0,0,0, 0,0,1):
+    i = 0
+    for d in raygen(*origin, 0,0,0, 0,0,1, resx= resolution, resy=resolution):
         p = raymerch(origin, d, CubeSdf((10,10,10)))
-        glVertex3d(*p)
-    glEnd()
+        points[i] = p
+        i += 1
+    for y in range(resolution-1):
+        for x in range(resolution-1):
+            ps = []
+            tl = points[y*resolution + x]
+            if tl: ps.append(tl)
+            tr = points[y*resolution + x + 1]
+            if tr: ps.append(tr)
+            br = points[(y+1)*resolution + x + 1]
+            if br: ps.append(br)
+            bl = points[(y+1)*resolution + x]
+            if bl: ps.append(bl)
+            l = len(ps)
+            if l == 4:
+                glBegin(GL_QUADS)
+            elif l == 3:
+                glBegin(GL_TRIANGLES)
+            if l > 2:
+                for p in ps:
+                    glVertex3f(*p);
+                glEnd()
+            
+                
 def draw_rays():
     glBegin(GL_LINES)
     resolution = 25
