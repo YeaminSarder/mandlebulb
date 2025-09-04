@@ -140,33 +140,36 @@ def idle():
 
 
 resolution = 50
-points = [(0,0,0) for _ in range(resolution*resolution)]  # capture points in each frame
+points_n_color = [((0,0,0), (0,0,0)) for _ in range(resolution*resolution)]  # capture points and colors in each frame
 
+
+cube = CubeSdf((10,10,10))
 def render():
     origin = camera_pos
     i = 0
     for d in raygen(*origin, 0,0,0, 0,0,1, resx= resolution, resy=resolution):
-        p = raymerch(origin, d, CubeSdf((10,10,10)))
-        points[i] = p
+        p = raymerch(origin, d, cube)
+        points_n_color[i] = (p, cube.getColor())
         i += 1
     for y in range(resolution-1):
         for x in range(resolution-1):
             ps = []
-            tl = points[y*resolution + x]
-            if tl: ps.append(tl)
-            tr = points[y*resolution + x + 1]
-            if tr: ps.append(tr)
-            br = points[(y+1)*resolution + x + 1]
-            if br: ps.append(br)
-            bl = points[(y+1)*resolution + x]
-            if bl: ps.append(bl)
+            tl = points_n_color[y*resolution + x]
+            if tl[0]: ps.append(tl)
+            tr = points_n_color[y*resolution + x + 1]
+            if tr[0]: ps.append(tr)
+            br = points_n_color[(y+1)*resolution + x + 1]
+            if br[0]: ps.append(br)
+            bl = points_n_color[(y+1)*resolution + x]
+            if bl[0]: ps.append(bl)
             l = len(ps)
             if l == 4:
                 glBegin(GL_QUADS)
             elif l == 3:
                 glBegin(GL_TRIANGLES)
             if l > 2:
-                for p in ps:
+                for p, c in ps:
+                    glColor3f(*c);
                     glVertex3f(*p);
                 glEnd()
             
