@@ -20,7 +20,7 @@ def raymerch(point, direction, minsdf, max_iteration = 100, min_d = 0.00001, max
             break
         d += safe_forward_distance
         if d > max_d:
-            return vec3_sub(point, di) # point - di
+            return None # point - di
         p = vec3_add(point, vec3_scaler_mul(d, di)) # point + d*di
         i += 1
     return vec3_add(point, vec3_scaler_mul(d, di)) # point + d*di
