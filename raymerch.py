@@ -20,7 +20,7 @@ def raymerch(point, direction, minsdf, max_iteration = 100, min_d = 0.00001, max
             break
         d += safe_forward_distance
         if d > max_d:
-            return vec3_sub(point, di) # point - di
+            return None # point - di
         p = vec3_add(point, vec3_scaler_mul(d, di)) # point + d*di
         i += 1
     return vec3_add(point, vec3_scaler_mul(d, di)) # point + d*di
@@ -34,8 +34,8 @@ def raygen(x,y,z,a,b,c,p,q,r,resx=50,resy=50):
     """
     mid = normalize(*vec3_sub((a,b,c), (x,y,z)))
     v = (p,q,r)
-    dy = normalize(*vec3_sub(v,vec3_scaler_mul(vec3_dot(mid, (p,q,r)),mid)))
-    dx = vec3_cross(mid,dy)
+    dx = normalize(*vec3_cross(mid, v))
+    dy = normalize(*vec3_cross(dx,mid))
     for i in range(resy):
         for j in range(resx):
             fy = -0.5 + i/resy
