@@ -3,7 +3,10 @@ class Sdf:
     def sdf(self, point):
         return 0
     def __call__(self, point):
-        return self.sdf(point)
+        return self.sdf(point) 
+    def getColor(self):
+        "returns the color of the point of last sdf call"
+        return (1,0,0)
 
 class CircleSdf(Sdf):
     def __init__(self,radius, position = (0,0,0)):
