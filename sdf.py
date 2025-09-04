@@ -24,3 +24,5 @@ class CubeSdf(Sdf):
         point = vec3_add(point, self.position)
         q = vec3_sub(vec3_op1(abs,point), self.corner)
         return length(*vec3_op2(max,q,(0,0,0))) + min(max(*q),0)
+    def getColor(self):
+        return (0,1,0)
