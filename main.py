@@ -6,11 +6,18 @@ import signal
 
 from sdf import *
 from raymerch import raymerch, raygen
+from lighting import Lighting, LightSource
 
 exit_flag = False
 
 # Camera-related variables
 camera_pos = (0,-30,0)
+
+# Lighting variables
+ls = LightSource((-100,-50,25))
+lighting = Lighting(ambient=(.25,.25,.25))
+lighting.addLightSource(ls)
+
 
 fovY = 120  # Field of view
 GRID_LENGTH = 600  # Length of grid lines
@@ -169,7 +176,8 @@ def render():
                 glBegin(GL_TRIANGLES)
             if l > 2:
                 for p, c in ps:
-                    glColor3f(*c);
+                    li = lighting.get(p,cube.getNormal(p),camera_pos)
+                    glColor3f(*vec3_serial_mul(c,li));
                     glVertex3f(*p);
                 glEnd()
             
