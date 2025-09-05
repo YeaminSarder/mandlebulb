@@ -7,7 +7,7 @@ import time
 exit_flag = False
 
 # Camera-related variables
-camera_pos = (0.0, 500.0 ,500.0)
+camera_pos = [0.0, 500.0 ,500.0]
 camera_dir = [0.0, -1.0, -0.5]   # forward direction
 camera_speed = 5.0
 auto_pilot = False
