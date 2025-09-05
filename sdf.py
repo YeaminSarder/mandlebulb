@@ -7,6 +7,17 @@ class Sdf:
     def getColor(self):
         "returns the color of the point of last sdf call"
         return (1,0,0)
+    def getNormal(self, point):
+        h = 0.0001;
+        da = self.sdf(vec3_add(point, (h,-h,-h)))
+        db = self.sdf(vec3_add(point, (-h,-h,h)))
+        dc = self.sdf(vec3_add(point, (-h,h,-h)))
+        dd = self.sdf(vec3_add(point, (h,h,h)))
+        return normalize(
+             da - db - dc + dd,
+             -da - db + dc + dd,
+             -da + db - dc + dd
+        )
 
 class CircleSdf(Sdf):
     def __init__(self,radius, position = (0,0,0)):
