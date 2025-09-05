@@ -151,12 +151,14 @@ points_n_color = [((0,0,0), (0,0,0)) for _ in range(resolution*resolution)]  # c
 
 
 cube = CubeSdf((10,10,10))
+circle = CircleSdf(10)
+scene = circle
 def render():
     origin = camera_pos
     i = 0
     for d in raygen(*origin, 0,0,0, 0,0,1, resx= resolution, resy=resolution):
-        p = raymerch(origin, d, cube)
-        points_n_color[i] = (p, cube.getColor())
+        p = raymerch(origin, d, scene)
+        points_n_color[i] = (p, scene.getColor())
         i += 1
     for y in range(resolution-1):
         for x in range(resolution-1):
@@ -176,8 +178,8 @@ def render():
                 glBegin(GL_TRIANGLES)
             if l > 2:
                 for p, c in ps:
-                    li = lighting.get(p,cube.getNormal(p),camera_pos)
-                    glColor3f(*vec3_serial_mul(c,li));
+                    li = lighting.apply(p,c,scene.getNormal(p),camera_pos)
+                    glColor3f(*li);
                     glVertex3f(*p);
                 glEnd()
             
