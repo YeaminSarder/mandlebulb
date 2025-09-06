@@ -8,7 +8,9 @@ from sdf import *
 from raymerch import raymerch, raygen
 from time import time
 from lighting import Lighting, LightSource
-
+from settings import toggle_settings 
+from dronelight import *
+from saveandload import save_config, load_config
 exit_flag = False
 
 
@@ -105,6 +107,40 @@ def keyboardListener(key, x, y):
         camera_dir[1]-=0.1
     if key == b'e':  # roll right
         camera_dir[1]+=0.1
+    
+    #menu controls
+    if key == b'\t':
+        toggle_settings()
+    elif key == b's':
+        save_config()
+    elif key == b'l':
+        load_config()
+    elif not settings_on:
+        # Drone controls
+        drone_moved = False
+        if key == b'i':
+            move_drone(4)
+            drone_moved = True
+        elif key == b'k':
+            move_drone(5)
+            drone_moved = True
+        elif key == b'j':
+            move_drone(2)
+            drone_moved = True
+        elif key == b'o':
+            move_drone(3)
+            drone_moved = True
+        elif key == b'u':
+            move_drone(0)
+            drone_moved = True
+        elif key == b'h':
+            move_drone(1)
+            drone_moved = True
+        
+        if drone_moved:
+            update_drone_light()
+        
+         
 
 
 def specialKeyListener(key, x, y):
