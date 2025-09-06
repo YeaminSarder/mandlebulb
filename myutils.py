@@ -36,3 +36,6 @@ def vec3_cross(v1,v2):
     a, b, c = v1
     d, e, f = v2
     return b*f - e*c, c*d - a*f, a*e - b*d
+
+def vec3_serial_mul(v1,v2):
+    return v1[0] * v2[0], v1[1] * v2[1], v1[2] * v2[2]

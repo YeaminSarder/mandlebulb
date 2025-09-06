@@ -7,10 +7,18 @@ import signal
 from sdf import *
 from raymerch import raymerch, raygen
 from time import time
+from lighting import Lighting, LightSource
+
 exit_flag = False
 
 
-fovY = 90  # Field of view
+# Lighting variables
+ls = LightSource((-100,-50,25))
+lighting = Lighting(ambient=(.25,.25,.25))
+lighting.addLightSource(ls)
+
+
+fovY = 90
 GRID_LENGTH = 600  # Length of grid lines
 rand_var = 423
 fps = 0
@@ -174,15 +182,44 @@ def idle():
     glutPostRedisplay()
 
 
+resolution = 50
+points_n_color = [((0,0,0), (0,0,0)) for _ in range(resolution*resolution)]  # capture points and colors in each frame
 
+
+cube = CubeSdf((10,10,10))
+circle = CircleSdf(10)
+scene = circle
 def render():
-    glBegin(GL_POINTS)
-    resolution = 25
     origin = camera_pos
-    for d in raygen(*getLookAtParams()):
-        p = raymerch(origin, d, CubeSdf((10,10,10)))
-        glVertex3d(*p)
-    glEnd()
+    i = 0
+    for d in raygen(*getLookAtParams(), resx= resolution, resy=resolution):
+        p = raymerch(origin, d, scene)
+        points_n_color[i] = (p, scene.getColor())
+        i += 1
+    for y in range(resolution-1):
+        for x in range(resolution-1):
+            ps = []
+            tl = points_n_color[y*resolution + x]
+            if tl[0]: ps.append(tl)
+            tr = points_n_color[y*resolution + x + 1]
+            if tr[0]: ps.append(tr)
+            br = points_n_color[(y+1)*resolution + x + 1]
+            if br[0]: ps.append(br)
+            bl = points_n_color[(y+1)*resolution + x]
+            if bl[0]: ps.append(bl)
+            l = len(ps)
+            if l == 4:
+                glBegin(GL_QUADS)
+            elif l == 3:
+                glBegin(GL_TRIANGLES)
+            if l > 2:
+                for p, c in ps:
+                    li = lighting.apply(p,c,scene.getNormal(p),camera_pos)
+                    glColor3f(*li);
+                    glVertex3f(*p);
+                glEnd()
+            
+                
 def draw_rays():
     glBegin(GL_LINES)
     resolution = 25

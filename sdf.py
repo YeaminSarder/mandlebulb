@@ -3,7 +3,21 @@ class Sdf:
     def sdf(self, point):
         return 0
     def __call__(self, point):
-        return self.sdf(point)
+        return self.sdf(point) 
+    def getColor(self):
+        "returns the color of the point of last sdf call"
+        return (1,0,0)
+    def getNormal(self, point):
+        h = 0.0001;
+        da = self.sdf(vec3_add(point, (h,-h,-h)))
+        db = self.sdf(vec3_add(point, (-h,-h,h)))
+        dc = self.sdf(vec3_add(point, (-h,h,-h)))
+        dd = self.sdf(vec3_add(point, (h,h,h)))
+        return normalize(
+             da - db - dc + dd,
+             -da - db + dc + dd,
+             -da + db - dc + dd
+        )
 
 class CircleSdf(Sdf):
     def __init__(self,radius, position = (0,0,0)):
@@ -21,3 +35,5 @@ class CubeSdf(Sdf):
         point = vec3_add(point, self.position)
         q = vec3_sub(vec3_op1(abs,point), self.corner)
         return length(*vec3_op2(max,q,(0,0,0))) + min(max(*q),0)
+    def getColor(self):
+        return (0,1,0)
