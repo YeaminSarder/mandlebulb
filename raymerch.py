@@ -1,11 +1,6 @@
 from myutils import *
 from mandlebulb import mandelbulb_sdf
 
-def minsdf(point):
-    return mandelbulb_sdf(point)
-
-
-
 def raymerch(point, direction, minsdf, max_iteration = 100, min_d = 0.00001, max_d = 1000):
     """
     point:tuple - 3d coordinate of point
