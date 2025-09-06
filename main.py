@@ -6,18 +6,22 @@ import signal
 
 from sdf import *
 from raymerch import raymerch, raygen
-
+from time import time
 exit_flag = False
 
 # Camera-related variables
-camera_pos = (0,-30,0)
+camera_pos = [0, -30 ,0]
+camera_dir = [0.0, -1.0, -0.5]   # forward direction
+camera_speed = 5.0
+auto_pilot = False
 
 fovY = 120  # Field of view
 GRID_LENGTH = 600  # Length of grid lines
 rand_var = 423
 fps = 0
-from time import time
 ptime = time()
+t0=time()
+
 
 def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
     glColor3f(1,1,1)
@@ -72,31 +76,38 @@ def keyboardListener(key, x, y):
     if key == b'\x1b': #escape
         global exit_flag
         exit_flag = True
-
+    
+    #Ishmam's camera controls
+    if key==b' ':  # Toggle autopilot
+        auto_pilot=not auto_pilot
+    if key == b'1':  # decrease speed
+        camera_speed=max(1.0, camera_speed - 1.0)
+    if key == b'2':  # increase speed
+        camera_speed+=1.0
+    if key == b'q':  # roll left
+        camera_dir[1]-=0.1
+    if key == b'e':  # roll right
+        camera_dir[1]+=0.1
 
 
 def specialKeyListener(key, x, y):
     """
-    Handles special key inputs (arrow keys) for adjusting the camera angle and height.
+    Arrow Keys for adjusting the camera angle and height.
     """
-    global camera_pos
+    global camera_pos, camera_dir
     x, y, z = camera_pos
-    # Move camera up (UP arrow key)
-    if key == GLUT_KEY_UP:
-        z += 1
 
-    # # Move camera down (DOWN arrow key)
-    if key == GLUT_KEY_DOWN:
-        z -= 1
-    # moving camera left (LEFT arrow key)
-    if key == GLUT_KEY_LEFT:
-        x -= 1  # Small angle decrement for smooth movement
+    #Ishmam's Controls
+    if key==GLUT_KEY_UP:     # look up
+        camera_dir[2]+=0.1
+    if key==GLUT_KEY_DOWN:   # look down
+        camera_dir[2]-=0.1
+    if key==GLUT_KEY_LEFT:   # rotate left
+        camera_dir[0]-=0.1
+    if key==GLUT_KEY_RIGHT:  # rotate right
+        camera_dir[0]+=0.1
 
-    # moving camera right (RIGHT arrow key)
-    if key == GLUT_KEY_RIGHT:
-        x += 1  # Small angle increment for smooth movement
-
-    camera_pos = (x, y, z)
+    camera_pos = [x, y, z]
 
 
 def mouseListener(button, state, x, y):
@@ -108,6 +119,20 @@ def mouseListener(button, state, x, y):
 
         # # Right mouse button toggles camera tracking mode
         # if button == GLUT_RIGHT_BUTTON and state == GLUT_DOWN:
+
+def update_camera_position():
+    global camera_pos, camera_dir, camera_speed, auto_pilot
+    if auto_pilot:
+        # Autopilot mode: scripted smooth flight
+        t = time() - t0
+        camera_pos[0] = 200 * math.sin(0.1*t)
+        camera_pos[1] = 200 * math.cos(0.1*t)
+        camera_pos[2] = 100 + 50 * math.sin(0.05*t)
+    else:
+        # Manual movement: move forward
+        camera_pos[0] += camera_dir[0] * camera_speed
+        camera_pos[1] += camera_dir[1] * camera_speed
+        camera_pos[2] += camera_dir[2] * camera_speed
 
 
 def setupCamera():
@@ -136,6 +161,7 @@ def idle():
     ntime = time()
     fps = 1/(ntime-ptime)
     ptime = ntime
+    update_camera_position()
     glutPostRedisplay()
 
 
