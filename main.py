@@ -9,20 +9,22 @@ from raymerch import raymerch, raygen
 from time import time
 exit_flag = False
 
-# Camera-related variables
-camera_pos = [0, -30 ,0]
-camera_dir = [0.0, -1.0, -0.5]   # forward direction
-camera_speed = 5.0
-auto_pilot = False
 
-fovY = 120  # Field of view
+fovY = 90  # Field of view
 GRID_LENGTH = 600  # Length of grid lines
 rand_var = 423
 fps = 0
 ptime = time()
 t0=time()
-
-
+def reset():
+    # Camera-related variables
+    global camera_pos, camera_dir, camera_speed, auto_pilot
+    camera_pos = [0, -30 ,0]
+    camera_dir = [0.0, 1.0, 0]   # forward direction
+    camera_speed = 0
+    auto_pilot = False
+reset()
+    
 def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
     glColor3f(1,1,1)
     glMatrixMode(GL_PROJECTION)
@@ -72,18 +74,23 @@ def draw_shapes():
     glPopMatrix()  # Restore the previous matrix state
 
 
+
+    
 def keyboardListener(key, x, y):
+    global auto_pilot, camera_speed, camera_dir
     if key == b'\x1b': #escape
         global exit_flag
         exit_flag = True
+    if key == b'r': #reset
+        reset()
     
     #Ishmam's camera controls
     if key==b' ':  # Toggle autopilot
         auto_pilot=not auto_pilot
     if key == b'1':  # decrease speed
-        camera_speed=max(1.0, camera_speed - 1.0)
+        camera_speed=max(0.0, camera_speed - 0.1)
     if key == b'2':  # increase speed
-        camera_speed+=1.0
+        camera_speed+=.1
     if key == b'q':  # roll left
         camera_dir[1]-=0.1
     if key == b'e':  # roll right
@@ -134,7 +141,11 @@ def update_camera_position():
         camera_pos[1] += camera_dir[1] * camera_speed
         camera_pos[2] += camera_dir[2] * camera_speed
 
-
+def getLookAtParams():
+    x, y, z = camera_pos
+    a, b, c = camera_dir
+    return x, y, z, x + a, y + b, z + c, 0,0,1
+        
 def setupCamera():
     """
     Configures the camera's projection and view settings.
@@ -143,16 +154,14 @@ def setupCamera():
     glMatrixMode(GL_PROJECTION)  # Switch to projection matrix mode
     glLoadIdentity()  # Reset the projection matrix
     # Set up a perspective projection (field of view, aspect ratio, near clip, far clip)
-    gluPerspective(fovY, 1.25, 0.1, 15000) # Think why aspect ration is 1.25?
+    gluPerspective(fovY, W/H, 0.1, 15000)
     glMatrixMode(GL_MODELVIEW)  # Switch to model-view matrix mode
     glLoadIdentity()  # Reset the model-view matrix
 
     # Extract camera position and look-at target
     x, y, z = camera_pos
     # Position the camera and set its orientation
-    gluLookAt(x, y, z,  # Camera position
-              0, 0, 0,  # Look-at target
-              0, 0, 1)  # Up vector (z-axis)
+    gluLookAt(*getLookAtParams())
 
 
 def idle():
@@ -170,7 +179,7 @@ def render():
     glBegin(GL_POINTS)
     resolution = 25
     origin = camera_pos
-    for d in raygen(*origin, 0,0,0, 0,0,1):
+    for d in raygen(*getLookAtParams()):
         p = raymerch(origin, d, CubeSdf((10,10,10)))
         glVertex3d(*p)
     glEnd()
@@ -227,7 +236,7 @@ def showScreen():
     # Clear color and depth buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()  # Reset modelview matrix
-    glViewport(0, 0, 1000, 800)  # Set viewport size
+    glViewport(0, 0, W, H)  # Set viewport size
 
     setupCamera()  # Configure camera perspective
 
@@ -251,11 +260,11 @@ def showScreen():
     glutSwapBuffers()
 
 
-# Main function to set up OpenGL window and loop
+W, H = 800, 800
 def main():
     glutInit()
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)  # Double buffering, RGB color, depth test
-    glutInitWindowSize(1000, 800)  # Window size
+    glutInitWindowSize(W, H)  # Window size
     glutInitWindowPosition(0, 0)  # Window position
     wind = glutCreateWindow(b"3D OpenGL Intro")  # Create the window
 

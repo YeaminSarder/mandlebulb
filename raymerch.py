@@ -44,6 +44,6 @@ def raygen(x,y,z,a,b,c,p,q,r,resx=50,resy=50):
     dy = normalize(*vec3_cross(dx,mid))
     for i in range(resy):
         for j in range(resx):
-            fy = -0.5 + i/resy
-            fx = -0.5 + j/resx
+            fy = -1 + 2*i/resy
+            fx = -1 + 2*j/resx
             yield normalize(*vec3_add(vec3_add(mid, vec3_scaler_mul(fx,dx)),vec3_scaler_mul(fy,dy)))
