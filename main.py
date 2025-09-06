@@ -24,11 +24,13 @@ rand_var = 423
 fps = 0
 ptime = time()
 t0=time()
+W, H = 300, 300
+resolution = 300
 def reset():
     # Camera-related variables
     global camera_pos, camera_dir, camera_speed, auto_pilot
-    camera_pos = [0, -30 ,0]
-    camera_dir = [0.0, 1.0, 0]   # forward direction
+    camera_pos = [-1.5, -1.5 ,0]
+    camera_dir = [1.0, 1.0, 0]   # forward direction
     camera_speed = 0
     auto_pilot = False
 reset()
@@ -182,13 +184,14 @@ def idle():
     glutPostRedisplay()
 
 
-resolution = 50
+
 points_n_color = [((0,0,0), (0,0,0)) for _ in range(resolution*resolution)]  # capture points and colors in each frame
 
 
-cube = CubeSdf((10,10,10))
+cube = CubeSdf((1,1,1))
 circle = CircleSdf(10)
-scene = circle
+mandlebulb = MandleBulbSdf()
+scene = mandlebulb
 def render():
     origin = camera_pos
     i = 0
@@ -297,7 +300,7 @@ def showScreen():
     glutSwapBuffers()
 
 
-W, H = 800, 800
+
 def main():
     glutInit()
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)  # Double buffering, RGB color, depth test
