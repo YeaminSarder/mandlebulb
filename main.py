@@ -16,7 +16,8 @@ exit_flag = False
 ls = LightSource((-100,-50,25))
 lighting = Lighting(ambient=(.25,.25,.25))
 lighting.addLightSource(ls)
-
+orbit_speed=0.1
+orbit_radius=220.0
 
 fovY = 90
 GRID_LENGTH = 600  # Length of grid lines
@@ -24,17 +25,85 @@ rand_var = 423
 fps = 0
 ptime = time()
 t0=time()
-W, H = 300, 300
-resolution = 300
+W, H = 700, 500
+resolution = 60
+
+#Ishmam's department
 def reset():
     # Camera-related variables
-    global camera_pos, camera_dir, camera_speed, auto_pilot
-    camera_pos = [-1.5, -1.5 ,0]
-    camera_dir = [1.0, 1.0, 0]   # forward direction
-    camera_speed = 0
+    global camera_pos, camera_dir, camera_speed, camera_radius, auto_pilot, yaw, pitch, orbit_radius, orbit_speed
+    camera_pos=[-150.0, -150.0, 60.0]
+    # xyz didn't work so im using angles
+    yaw=45     
+    pitch=0    
+    camera_speed=0
     auto_pilot = False
-reset()
+    #Autopilot zoom and speed control
+    orbit_radius=220.0
+    camera_radius=max(1.0, math.sqrt(camera_pos[0]**2 + camera_pos[1]**2 + camera_pos[2]**2))
+
+    update_camera() 
+
+def update_camera():
+    global camera_dir, yaw, pitch
+    rad_yaw = math.radians(yaw)
+    rad_pitch = math.radians(pitch)
+
+    #serial x,y,z
+    camera_dir = [
+        math.cos(rad_pitch) * math.cos(rad_yaw),   
+        math.cos(rad_pitch) * math.sin(rad_yaw),   
+        math.sin(rad_pitch)                        
+    ]
+
+def update_camera_position():
+    global camera_pos, camera_dir, camera_speed, auto_pilot, orbit_radius, orbit_speed, camera_radius
+    if auto_pilot:
+        #Auto
+        t=time()-t0
+        radius=orbit_radius
+        height=100+50*math.sin(0.2 * orbit_speed * t)
+
+        camera_pos[0]=radius*math.sin(0.2 *orbit_speed*t)
+        camera_pos[1]=radius*math.cos(0.2 *orbit_speed* t)
+        camera_pos[2]=height
+
+        #Look at the centre 
+        target=[0.0, 0.0, 0.0]
+        dx=target[0]-camera_pos[0]
+        dy=target[1]-camera_pos[1]
+        dz=target[2]-camera_pos[2]
+
+        length=math.sqrt(dx*dx+dy*dy+dz*dz)
+        camera_dir[0]=dx/length
+        camera_dir[1]=dy/length
+        camera_dir[2]=dz/length
+
+        #normalize vector for new dir
+        length=math.sqrt(dx*dx + dy*dy + dz*dz)
+        camera_dir[0]=dx/length
+        camera_dir[1]=dy/length
+        camera_dir[2]=dz/length
     
+    else:
+        # Manual 
+        camera_radius = max(1.0, camera_radius + camera_speed)
+        rad_yaw = math.radians(yaw)
+        rad_pitch = math.radians(pitch)
+
+        camera_pos[0] = camera_radius * math.cos(rad_pitch) * math.cos(rad_yaw)
+        camera_pos[1] = camera_radius * math.cos(rad_pitch) * math.sin(rad_yaw)
+        camera_pos[2] = camera_radius * math.sin(rad_pitch)
+
+        # Always look at center
+        dx = -camera_pos[0]
+        dy = -camera_pos[1]
+        dz = -camera_pos[2]
+        length = math.sqrt(dx*dx + dy*dy + dz*dz)
+        if length != 0:
+            camera_dir[0] = dx / length
+            camera_dir[1] = dy / length
+            camera_dir[2] = dz / length
 def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
     glColor3f(1,1,1)
     glMatrixMode(GL_PROJECTION)
@@ -42,7 +111,7 @@ def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
     glLoadIdentity()
     
     # Set up an orthographic projection that matches window coordinates
-    gluOrtho2D(0, 1000, 0, 800)  # left, right, bottom, top
+    gluOrtho2D(0, W, 0, H)  # left, right, bottom, top
 
     
     glMatrixMode(GL_MODELVIEW)
@@ -50,7 +119,7 @@ def draw_text(x, y, text, font=GLUT_BITMAP_HELVETICA_18):
     glLoadIdentity()
     
     # Draw text at (x, y) in screen coordinates
-    glRasterPos2f(x, y)
+    glRasterPos2f(x, H-y)
     for ch in text:
         glutBitmapCharacter(font, ord(ch))
     
@@ -87,7 +156,7 @@ def draw_shapes():
 
     
 def keyboardListener(key, x, y):
-    global auto_pilot, camera_speed, camera_dir
+    global auto_pilot, camera_speed, camera_dir, orbit_radius, orbit_speed, exit_flag, camera_radius
     if key == b'\x1b': #escape
         global exit_flag
         exit_flag = True
@@ -95,37 +164,49 @@ def keyboardListener(key, x, y):
         reset()
     
     #Ishmam's camera controls
-    if key==b' ':  # Toggle autopilot
+    #case 1: autopilot
+    if key==b' ': 
         auto_pilot=not auto_pilot
-    if key == b'1':  # decrease speed
+    
+    #Speed control when in manual mode
+    if key == b'1': 
         camera_speed=max(0.0, camera_speed - 0.1)
-    if key == b'2':  # increase speed
+        if not auto_pilot:
+            camera_radius = max(1.0, camera_radius - 2.0) 
+    if key == b'2': 
         camera_speed+=.1
-    if key == b'q':  # roll left
-        camera_dir[1]-=0.1
-    if key == b'e':  # roll right
-        camera_dir[1]+=0.1
+        if not auto_pilot:
+            camera_radius+=2.0
+
+    #Auto pilot control radius
+    if key==b'-':
+        orbit_radius+=20
+    if key==b'+':
+        orbit_radius=max(50, orbit_radius-20)
+    #Speed control
+    if key==b'[':
+        orbit_speed=max(0.05, orbit_speed-0.05)
+    if key==b']':
+        orbit_speed+=0.05
 
 
 def specialKeyListener(key, x, y):
-    """
-    Arrow Keys for adjusting the camera angle and height.
-    """
-    global camera_pos, camera_dir
-    x, y, z = camera_pos
+    global yaw, pitch
 
     #Ishmam's Controls
-    if key==GLUT_KEY_UP:     # look up
-        camera_dir[2]+=0.1
-    if key==GLUT_KEY_DOWN:   # look down
-        camera_dir[2]-=0.1
-    if key==GLUT_KEY_LEFT:   # rotate left
-        camera_dir[0]-=0.1
-    if key==GLUT_KEY_RIGHT:  # rotate right
-        camera_dir[0]+=0.1
-
-    camera_pos = [x, y, z]
-
+    #up, down, left, right
+    if key == GLUT_KEY_UP:     
+        pitch = min(89, pitch + 2)
+    if key == GLUT_KEY_DOWN:   
+        pitch = max(-89, pitch - 2)
+    if key == GLUT_KEY_LEFT:   
+        yaw -= 2
+    if key == GLUT_KEY_RIGHT:  
+        yaw += 2
+    
+    update_camera()
+    
+    
 
 def mouseListener(button, state, x, y):
     """
@@ -137,19 +218,6 @@ def mouseListener(button, state, x, y):
         # # Right mouse button toggles camera tracking mode
         # if button == GLUT_RIGHT_BUTTON and state == GLUT_DOWN:
 
-def update_camera_position():
-    global camera_pos, camera_dir, camera_speed, auto_pilot
-    if auto_pilot:
-        # Autopilot mode: scripted smooth flight
-        t = time() - t0
-        camera_pos[0] = 200 * math.sin(0.1*t)
-        camera_pos[1] = 200 * math.cos(0.1*t)
-        camera_pos[2] = 100 + 50 * math.sin(0.05*t)
-    else:
-        # Manual movement: move forward
-        camera_pos[0] += camera_dir[0] * camera_speed
-        camera_pos[1] += camera_dir[1] * camera_speed
-        camera_pos[2] += camera_dir[2] * camera_speed
 
 def getLookAtParams():
     x, y, z = camera_pos
@@ -188,10 +256,10 @@ def idle():
 points_n_color = [((0,0,0), (0,0,0)) for _ in range(resolution*resolution)]  # capture points and colors in each frame
 
 
-cube = CubeSdf((1,1,1))
-circle = CircleSdf(10)
+cube = CubeSdf((60,60,60))
+circle = CircleSdf(40)
 mandlebulb = MandleBulbSdf()
-scene = mandlebulb
+scene =  cube
 def render():
     origin = camera_pos
     i = 0
@@ -288,8 +356,10 @@ def showScreen():
 
 
     # Display game info text at a fixed screen position
-    draw_text(10, 770, f"fps: {fps}")
-    draw_text(10, 740, f"See how the position and variable change?: {rand_var}")
+    draw_text(10, 20, f"fps: {fps}")
+    draw_text(10, 50, f"See how the position and variable change?: {rand_var}")
+    draw_text(10, 80, f"Orbit radius: {orbit_radius}")   
+    draw_text(10, 110, f"Orbit speed: {orbit_speed:.2f}")
 
     #draw_grid()
     render()
@@ -307,6 +377,8 @@ def main():
     glutInitWindowSize(W, H)  # Window size
     glutInitWindowPosition(0, 0)  # Window position
     wind = glutCreateWindow(b"3D OpenGL Intro")  # Create the window
+
+    reset()
 
     glutDisplayFunc(showScreen)  # Register display function
     glutKeyboardFunc(keyboardListener)  # Register keyboard listener
