@@ -27,7 +27,7 @@ fps = 0
 ptime = time()
 t0=time()
 W, H = 500, 500
-resolution=40
+resolution=20
 
 
 #Ishmam's department
@@ -154,6 +154,7 @@ def draw_shapes():
     
 def keyboardListener(key, x, y):
     global auto_pilot, camera_speed, camera_dir, orbit_radius, orbit_speed, exit_flag, camera_radius
+    global resolution, scene, points_n_color
     if key == b'\x1b': #escape
         global exit_flag
         exit_flag = True
@@ -185,7 +186,23 @@ def keyboardListener(key, x, y):
         orbit_speed=orbit_speed-0.05
     if key==b']':
         orbit_speed+=0.05
-
+    if key==b'0':
+        resolution += 10
+        points_n_color = [((1,1,1), (1,1,1)) for _ in range(resolution*resolution)]
+        camera_dir[0] += 0.1 #for the screen to take refresh
+    if key==b'9':
+        resolution -= 10
+        points_n_color = [((1,1,1), (1,1,1)) for _ in range(resolution*resolution)]
+        camera_dir[0] += 0.1 
+    if key==b'6':
+        scene = cube
+        camera_dir[0] += 0.1
+    if key==b'7':
+        scene = circle
+        camera_dir[0] += 0.1
+    if key==b'8':
+        scene = mandlebulb
+        camera_dir[0] += 0.1
 
 def specialKeyListener(key, x, y):
     global yaw, pitch
@@ -256,7 +273,7 @@ points_n_color = [((0,0,0), (0,0,0)) for _ in range(resolution*resolution)]  # c
 cube = CubeSdf((1,1,1)) # match mandlebulb size
 circle = CircleSdf(1)
 mandlebulb = MandleBulbSdf()
-scene = mandlebulb
+scene = circle
 from concurrent import futures
 executor = futures.ProcessPoolExecutor(16)
 porigin, pdir = 0,0
@@ -360,15 +377,16 @@ def showScreen():
     # glVertex3f(-GRID_LENGTH, GRID_LENGTH, 0)
     # glEnd()
 
-
+    render()
     # Display game info text at a fixed screen position
     draw_text(10, 20, f"fps: {fps}")
     draw_text(10, 50, f"See how the position and variable change?: {rand_var}")
     draw_text(10, 80, f"Orbit radius: {orbit_radius}")   
     draw_text(10, 110, f"Orbit speed: {orbit_speed:.2f}")
+    draw_text(10, 140, f"resolution: {resolution}")
 
     #draw_grid()
-    render()
+    
     #draw_rays()
     #draw_ray_dir()
 
