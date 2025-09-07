@@ -26,8 +26,8 @@ rand_var = 423
 fps = 0
 ptime = time()
 t0=time()
-W, H = 700, 500
-resolution=150
+W, H = 500, 500
+resolution=40
 
 
 #Ishmam's department
