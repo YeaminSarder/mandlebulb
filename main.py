@@ -253,8 +253,8 @@ def idle():
 points_n_color = [((0,0,0), (0,0,0)) for _ in range(resolution*resolution)]  # capture points and colors in each frame
 
 
-cube = CubeSdf((60,60,60))
-circle = CircleSdf(40)
+cube = CubeSdf((1,1,1)) # match mandlebulb size
+circle = CircleSdf(1)
 mandlebulb = MandleBulbSdf()
 scene =  mandlebulb
 def render():
