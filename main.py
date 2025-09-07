@@ -256,14 +256,23 @@ points_n_color = [((0,0,0), (0,0,0)) for _ in range(resolution*resolution)]  # c
 cube = CubeSdf((1,1,1)) # match mandlebulb size
 circle = CircleSdf(1)
 mandlebulb = MandleBulbSdf()
-scene =  mandlebulb
+scene = mandlebulb
+from concurrent import futures
+executor = futures.ProcessPoolExecutor(16)
+porigin, pdir = 0,0
 def render():
-    origin = camera_pos
-    i = 0
-    for d in raygen(*getLookAtParams(), resx= resolution, resy=resolution):
-        p = raymerch(origin, d, scene)
-        points_n_color[i] = (p, scene.getColor())
-        i += 1
+    global porigin, pdir, points_n_color
+    origin = tuple(camera_pos)
+    if not porigin == origin or not pdir == tuple(camera_dir):
+        fs = [executor.submit(raymerch, origin, d, scene) for d in raygen(*getLookAtParams(), resx= resolution, resy=resolution)]
+        futures.wait(fs)
+        points = [f.result() for f in fs]
+        fs2 = [executor.submit(scene.getColorForPoint,point) for point in points]
+        futures.wait(fs2)
+        colors = [f.result() for f in fs2]
+        points_n_color = list(zip(points,colors))
+        porigin = origin
+        pdir = tuple(camera_dir)
     for y in range(resolution-1):
         for x in range(resolution-1):
             ps = []

@@ -7,6 +7,11 @@ class Sdf:
     def getColor(self):
         "returns the color of the point of last sdf call"
         return (1,0,0)
+    def getColorForPoint(self, point):
+        if not point:
+            return (0,0,0)
+        self.sdf(point)
+        return self.getColor()
     def getNormal(self, point):
         h = 0.0001;
         da = self.sdf(vec3_add(point, (h,-h,-h)))
@@ -39,19 +44,22 @@ class CubeSdf(Sdf):
         return (0,1,0)
 
 import math
+from functools import cache
 class MandleBulbSdf(Sdf):
     def __init__(self):
         self.color = [0,0,1]
         self.colortrap = [0,0,0]
     def getColor(self):
         return (self.colortrap[0],self.colortrap[1],0)
-    def sdf(self, point, power=8, max_iter=12, bailout=2.0):
+    @cache
+    def getColorForPoint(self, point, power=8, max_iter=12, bailout=2.0):
+        if not point:
+            return (0,0,0)
         x, y, z = point
         z_vec = [x, y, z]
         dr = 1.0
         r = 0.0
-        self.colortrap[0] = math.inf
-        self.colortrap[1] = math.inf
+        colortrap = [math.inf,math.inf]
         for i in range(max_iter):
             x, y, z = z_vec
             r = math.sqrt(x*x + y*y + z*z)
@@ -76,6 +84,38 @@ class MandleBulbSdf(Sdf):
                 zr * math.sin(theta) * math.sin(phi) + point[1],
                 zr * math.cos(theta) + point[2]
             ]
-            self.colortrap[0] = min(self.colortrap[0], zr)
-            self.colortrap[1] = min(self.colortrap[1],abs(z_vec[2]))
+            colortrap[0] = min(colortrap[0], zr)
+            colortrap[1] = min(colortrap[1],abs(z_vec[2]))
+        return (colortrap[0],colortrap[1],0)
+    
+    @cache
+    def sdf(self, point, power=8, max_iter=12, bailout=2.0):
+        x, y, z = point
+        z_vec = [x, y, z]
+        dr = 1.0
+        r = 0.0
+        for i in range(max_iter):
+            x, y, z = z_vec
+            r = math.sqrt(x*x + y*y + z*z)
+
+            #Division by zero check
+            if r < 1e-6:
+                return -1.0  #inside fractal therefore negative distance
+
+            if r > bailout:
+                break
+
+            theta = math.acos(z/r)
+            phi = math.atan2(y, x)
+            dr = pow(r, power - 1.0) * power * dr + 1.0
+
+            zr = pow(r, power)
+            theta *= power
+            phi *= power
+
+            z_vec = [
+                zr * math.sin(theta) * math.cos(phi) + point[0],
+                zr * math.sin(theta) * math.sin(phi) + point[1],
+                zr * math.cos(theta) + point[2]
+            ]
         return 0.5 * math.log(r) * r / dr if r > 0 else -1.0
